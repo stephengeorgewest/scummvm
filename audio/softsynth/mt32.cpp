@@ -169,25 +169,13 @@ int MidiDriver_MT32::open() {
 
 	Common::File controlFile;
 	Common::File pcmFile;
-	bool CM32L_ControlFileOpen = controlFile.open("CM32L_CONTROL.ROM");
-	bool CM32L_PcmFileOpen = pcmFile.open("CM32L_PCM.ROM");
-	if (!CM32L_ControlFileOpen || !CM32L_PcmFileOpen) {
+	if (!controlFile.open("CM32L_CONTROL.ROM") || !pcmFile.open("CM32L_PCM.ROM")) {
 		controlFile.close();
 		pcmFile.close();
 
-
-		bool MT32_ControlFileOpen = controlFile.open("MT32_CONTROL.ROM");
-		bool MT32_PcmFileOpen = pcmFile.open("MT32_PCM.ROM");
-		if (!MT32_ControlFileOpen || !MT32_PcmFileOpen) {
+		if (!controlFile.open("MT32_CONTROL.ROM") || !pcmFile.open("MT32_PCM.ROM")) {
 			controlFile.close();
 			pcmFile.close();
-
-			const char *reason = !CM32L_ControlFileOpen && !CM32L_PcmFileOpen
-				? "CM32L_CONTROL.ROM & CM32L_PCM.ROM"
-				: !CM32L_ControlFileOpen
-					? "CM32L_CONTROL.ROM"
-					: "CM32L_PCM.ROM";
-			debug("Unable to open %s. Falling back to MT32", reason);
 			error("Error opening (CM32L_CONTROL.ROM / CM32L_PCM.ROM) or (MT32_CONTROL.ROM / MT32_PCM.ROM). Check that your Extra Path in Paths settings is set to the correct directory");
 		}
 	}
@@ -468,9 +456,13 @@ MusicDevices MT32EmuMusicPlugin::getDevices() const {
 }
 
 bool MT32EmuMusicPlugin::checkDevice(MidiDriver::DeviceHandle) const {
-	if (!((Common::File::exists("MT32_CONTROL.ROM") && Common::File::exists("MT32_PCM.ROM")) ||
-		(Common::File::exists("CM32L_CONTROL.ROM") && Common::File::exists("CM32L_PCM.ROM")))) {
-			warning("The MT-32 emulator requires one of the two following file sets (not bundled with ScummVM):\n Either 'MT32_CONTROL.ROM' and 'MT32_PCM.ROM' or 'CM32L_CONTROL.ROM' and 'CM32L_PCM.ROM'");
+	bool CM32L_Control = Common::File::exists("CM32L_CONTROL.ROM");
+	bool CM32L_PcmFile = Common::File::exists("CM32L_PCM.ROM");
+	bool MT32_ControlFile = Common::File::exists("MT32_CONTROL.ROM");
+	bool MT32_PcmFile = Common::File::exists("MT32_PCM.ROM");
+	if (!((CM32L_Control && CM32L_PcmFile) || (MT32_ControlFile && MT32_PcmFile))) {
+		warning("The MT-32 emulator requires one of the two following file sets (not bundled with ScummVM):\n Either ('MT32_CONTROL.ROM' and 'MT32_PCM.ROM') or ('CM32L_CONTROL.ROM' and 'CM32L_PCM.ROM)'\n Found:           %s                   %s                     %s                       %s       ",
+			MT32_ControlFile ? "Y" : "N", MT32_PcmFile ? "Y" : "N", CM32L_Control ? "Y" : "N", CM32L_PcmFile ? "Y" : "N");
 			return false;
 	}
 
