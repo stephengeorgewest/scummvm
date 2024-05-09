@@ -169,14 +169,25 @@ int MidiDriver_MT32::open() {
 
 	Common::File controlFile;
 	Common::File pcmFile;
-	if (!controlFile.open("CM32L_CONTROL.ROM") || !pcmFile.open("CM32L_PCM.ROM")) {
+	bool CM32L_ControlFileOpen = controlFile.open("CM32L_CONTROL.ROM");
+	bool CM32L_PcmFileOpen = pcmFile.open("CM32L_PCM.ROM");
+	if (!CM32L_ControlFileOpen || !CM32L_PcmFileOpen) {
 		controlFile.close();
 		pcmFile.close();
-		debug("Unable to open CM32L_CONTROL.ROM / CM32L_PCM.ROM. Falling back to MT32");
 
-		if (!controlFile.open("MT32_CONTROL.ROM") || !pcmFile.open("MT32_PCM.ROM")) {
+
+		bool MT32_ControlFileOpen = controlFile.open("MT32_CONTROL.ROM");
+		bool MT32_PcmFileOpen = pcmFile.open("MT32_PCM.ROM");
+		if (!MT32_ControlFileOpen || !MT32_PcmFileOpen) {
 			controlFile.close();
 			pcmFile.close();
+
+			const char *reason = !CM32L_ControlFileOpen && !CM32L_PcmFileOpen
+				? "CM32L_CONTROL.ROM & CM32L_PCM.ROM"
+				: !CM32L_ControlFileOpen
+					? "CM32L_CONTROL.ROM"
+					: "CM32L_PCM.ROM";
+			debug("Unable to open %s. Falling back to MT32", reason);
 			error("Error opening (CM32L_CONTROL.ROM / CM32L_PCM.ROM) or (MT32_CONTROL.ROM / MT32_PCM.ROM). Check that your Extra Path in Paths settings is set to the correct directory");
 		}
 	}
